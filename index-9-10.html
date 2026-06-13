@@ -1,0 +1,2552 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>موقعي</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --border: #e4e4e0;
+    --text: #000000;
+    --muted: #444444;
+    --accent: #2563eb;
+    --danger: #dc2626;
+    --radius: 10px;
+  }
+
+  body.dark {
+    --bg: #111114;
+    --surface: #1c1c20;
+    --border: #2e2e34;
+    --text: #ffffff;
+    --muted: #aaaaaa;
+    --accent: #60a5fa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  button:focus, button:focus-visible, button:active { outline: none; box-shadow: none; }
+  button::-moz-focus-inner { border: 0; }
+  .like-btn:focus, .like-btn:focus-visible, .like-btn:active,
+  .comment-toggle-btn:focus, .comment-toggle-btn:focus-visible, .comment-toggle-btn:active,
+  .rating-btn:focus, .rating-btn:focus-visible, .rating-btn:active,
+  .star-btn:focus, .star-btn:focus-visible, .star-btn:active,
+  .comment-send-btn:focus, .comment-send-btn:focus-visible, .comment-send-btn:active { outline: none !important; }
+
+  /* منع نسخ النصوص للزوار */
+  body:not(.admin-mode) .post-content,
+  body:not(.admin-mode) .post-title,
+  body:not(.admin-mode) .tip-text {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Cairo', Tahoma, Arial, sans-serif;
+    line-height: 1.6;
+    transition: background 0.3s, color 0.3s;
+    background-image: radial-gradient(ellipse at 20% 20%, rgba(99,179,237,0.18) 0%, transparent 60%),
+                      radial-gradient(ellipse at 80% 80%, rgba(167,139,250,0.15) 0%, transparent 60%);
+    background-attachment: fixed;
+  }
+
+  body.dark {
+    background-image: radial-gradient(ellipse at 20% 20%, rgba(37,99,235,0.12) 0%, transparent 60%),
+                      radial-gradient(ellipse at 80% 80%, rgba(124,58,237,0.10) 0%, transparent 60%);
+  }
+
+  /* ===== HEADER ===== */
+  .site-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .site-title { font-size: 1.2rem; font-weight: 700; }
+
+  .admin-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 7px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .admin-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ===== MAIN FEED ===== */
+  .feed {
+    max-width: 680px;
+    margin: 32px auto;
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .empty-feed {
+    text-align: center;
+    color: var(--muted);
+    padding: 80px 20px;
+    font-size: 0.95rem;
+  }
+
+  /* ===== POST CARD ===== */
+  .post-card {
+    background: rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 20px;
+    overflow: hidden;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255,255,255,0.8),
+      inset 0 -1px 0 rgba(255,255,255,0.2);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .post-card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.12),
+      inset 0 1px 0 rgba(255,255,255,0.9),
+      inset 0 -1px 0 rgba(255,255,255,0.3);
+  }
+
+  body.dark .post-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255,255,255,0.1),
+      inset 0 -1px 0 rgba(255,255,255,0.04);
+  }
+
+  body.dark .post-card:hover {
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255,255,255,0.15),
+      inset 0 -1px 0 rgba(255,255,255,0.06);
+  }
+
+  .post-card.is-pinned {
+    border-color: rgba(37, 99, 235, 0.5);
+    border-width: 1.5px;
+    box-shadow:
+      0 4px 24px rgba(37, 99, 235, 0.15),
+      inset 0 1px 0 rgba(255,255,255,0.8);
+  }
+
+  .post-meta {
+    padding: 14px 18px 0;
+    font-size: 0.8rem;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .post-type-badge {
+    font-size: 0.72rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .badge-tip { background: #fdf4ff; color: #7c3aed; }
+
+  .tip-card-img {
+    width: 100%;
+    display: block;
+    max-height: 340px;
+    object-fit: cover;
+  }
+
+  .tip-card-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 40px 16px 16px;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(0,0,0,0.15) 30%,
+      rgba(0,0,0,0.65) 70%,
+      rgba(0,0,0,0.85) 100%
+    );
+    backdrop-filter: blur(0px);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .tip-card-footer .tip-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    padding: 3px 12px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.25);
+    color: #fff;
+    align-self: flex-start;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+
+  .tip-card-footer .tip-text {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.5;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+
+  .tip-card-footer .tip-sub {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.75);
+    font-weight: 400;
+  }
+
+  .post-body { padding: 14px 18px 18px; }
+
+  .post-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .post-content {
+    font-size: 0.93rem;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .post-content.collapsed {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .read-more-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin-top: 6px;
+    padding: 0;
+  }
+
+  .post-image {
+    width: 100%;
+    max-height: 480px;
+    object-fit: cover;
+    display: block;
+    margin-top: 12px;
+    border-radius: 6px;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    pointer-events: none;
+  }
+
+  .post-image-wrapper {
+    position: relative;
+    display: block;
+    pointer-events: auto;
+  }
+
+  .post-image-wrapper::after {
+    content: '© ZYNOK';
+    position: absolute;
+    bottom: 8px;
+    left: 10px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.55);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .post-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 8px 16px;
+    background: none;
+    border: 1.5px solid;
+    border-radius: 50px;
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    max-width: fit-content;
+  }
+  .post-link:hover { opacity: 0.75; }
+
+  .post-footer {
+    padding: 0 18px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .like-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 4px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    transition: color 0.2s;
+  }
+
+  .like-btn svg {
+    transition: transform 0.15s, fill 0.2s, stroke 0.2s;
+  }
+
+  .like-btn:hover svg {
+    transform: scale(1.15);
+  }
+
+  .like-btn.liked svg {
+    fill: #ffffff;
+    stroke: #ffffff;
+  }
+
+  .like-btn.liked { color: #ffffff; }
+
+  @keyframes heartPop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.4); }
+    70%  { transform: scale(0.9); }
+    100% { transform: scale(1); }
+  }
+
+  .like-btn.pop svg {
+    animation: heartPop 0.35s ease forwards;
+  }
+
+  .delete-post-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: none;
+    transition: color 0.2s;
+  }
+  .delete-post-btn:hover { color: var(--danger); }
+  body.admin-mode .delete-post-btn { display: inline-block; }
+
+  .pin-post-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: none;
+    transition: color 0.2s;
+  }
+  .pin-post-btn:hover { color: var(--accent); }
+  .pin-post-btn.pinned { color: var(--accent); font-weight: 700; }
+  body.admin-mode .pin-post-btn { display: inline-block; }
+
+  .pinned-badge {
+    font-size: 0.72rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: #eff6ff;
+    color: var(--accent);
+    font-weight: 600;
+    border: 1px solid var(--accent);
+  }
+
+  .post-card.is-pinned {
+    border-color: var(--accent);
+    border-width: 1.5px;
+  }
+
+
+
+  /* ===== COMMENTS ===== */
+  .comment-section {
+    border-top: 1px solid var(--border);
+    padding: 4px 18px 14px;
+  }
+
+  @keyframes glassRing { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  /* Liquid glass comment toggle button */
+  .comment-toggle-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.45);
+    color: rgba(70,70,95,0.9);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    padding: 4px 12px 4px 9px;
+    border-radius: 20px;
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    box-shadow:
+      inset 0 1.5px 0 rgba(255,255,255,0.75),
+      inset 0 -1px 0 rgba(255,255,255,0.2),
+      0 2px 10px rgba(0,0,0,0.07);
+    transition: transform 0.25s, box-shadow 0.25s;
+    font-family: 'Cairo', inherit;
+    overflow: hidden;
+  }
+  .comment-toggle-btn::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 22px;
+    background: conic-gradient(from 0deg,
+      transparent 0%,
+      rgba(99,179,237,0.55) 18%,
+      rgba(167,139,250,0.65) 36%,
+      rgba(255,255,255,0.95) 50%,
+      rgba(167,139,250,0.65) 64%,
+      rgba(99,179,237,0.55) 82%,
+      transparent 100%
+    );
+    animation: glassRing 3s linear infinite;
+    z-index: 0;
+  }
+  .comment-toggle-btn::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 19px;
+    background: rgba(255,255,255,0.58);
+    backdrop-filter: blur(8px);
+    z-index: 1;
+  }
+  body.dark .comment-toggle-btn {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.16);
+    color: rgba(195,200,220,0.9);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 2px 8px rgba(0,0,0,0.35);
+  }
+  body.dark .comment-toggle-btn::after { background: rgba(20,20,26,0.78); }
+  .comment-toggle-btn > * { position: relative; z-index: 2; }
+  .comment-toggle-btn:hover { transform: scale(1.05); box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.9), 0 5px 16px rgba(99,179,237,0.28); }
+
+  /* ===== RATING BUTTON ===== */
+  .rating-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.45);
+    color: rgba(70,70,95,0.9);
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    padding: 4px 11px 4px 8px;
+    border-radius: 20px;
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.75), 0 2px 10px rgba(0,0,0,0.07);
+    transition: transform 0.25s, box-shadow 0.25s;
+    font-family: 'Cairo', inherit;
+    overflow: hidden;
+  }
+  .rating-btn::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 22px;
+    background: conic-gradient(from 0deg, transparent 0%, rgba(250,204,21,0.55) 20%, rgba(251,146,60,0.65) 40%, rgba(255,255,255,0.9) 50%, rgba(251,146,60,0.65) 60%, rgba(250,204,21,0.55) 80%, transparent 100%);
+    animation: glassRing 3s linear infinite;
+    z-index: 0;
+  }
+  .rating-btn::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 19px;
+    background: rgba(255,255,255,0.58);
+    backdrop-filter: blur(8px);
+    z-index: 1;
+  }
+  body.dark .rating-btn { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.16); color: rgba(195,200,220,0.9); }
+  body.dark .rating-btn::after { background: rgba(20,20,26,0.78); }
+  .rating-btn > * { position: relative; z-index: 2; }
+  .rating-btn:hover { transform: scale(1.05); box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.9), 0 5px 16px rgba(250,204,21,0.28); }
+
+  .rating-box { display: none; padding: 8px 4px 2px; direction: ltr; align-items: center; gap: 4px; }
+  .rating-box.open { display: flex; }
+
+  .star-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 3px;
+    font-size: 1.55rem;
+    line-height: 1;
+    color: rgba(160,160,180,0.4);
+    transition: color 0.2s, transform 0.15s, filter 0.2s;
+  }
+  .star-btn:hover { color: #fff; filter: drop-shadow(0 0 6px rgba(250,204,21,0.9)); transform: scale(1.2); }
+  .star-btn.active { color: #fff; filter: drop-shadow(0 0 5px rgba(250,204,21,0.8)); }
+  .star-btn.submitted { color: #fff; filter: drop-shadow(0 0 5px rgba(250,204,21,0.8)); cursor: default; pointer-events: none; }
+
+  .rating-sent-msg { display: none; font-size: 0.74rem; color: var(--muted); padding: 4px 4px 0; direction: rtl; }
+  .rating-sent-msg.visible { display: block; }
+
+  /* Liquid glass send button */
+  .comment-send-btn {
+    position: relative;
+    background: rgba(255,255,255,0.22);
+    border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    color: rgba(60,60,85,0.85);
+    box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.75), 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+  }
+  .comment-send-btn::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg,
+      transparent 0%,
+      rgba(99,179,237,0.65) 25%,
+      rgba(255,255,255,1) 50%,
+      rgba(167,139,250,0.65) 75%,
+      transparent 100%
+    );
+    animation: glassRing 2.5s linear infinite;
+    z-index: 0;
+  }
+  .comment-send-btn::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.62);
+    backdrop-filter: blur(6px);
+    z-index: 1;
+  }
+  body.dark .comment-send-btn { color: rgba(195,200,220,0.9); box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 2px 8px rgba(0,0,0,0.35); }
+  body.dark .comment-send-btn::after { background: rgba(20,20,26,0.8); }
+  .comment-send-btn > * { position: relative; z-index: 2; }
+  .comment-send-btn:hover { transform: scale(1.1); box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.9), 0 4px 14px rgba(99,179,237,0.3); }
+
+  /* Sparkle sending state */
+  .comment-send-btn.sending { pointer-events: none; cursor: default; }
+  .comment-send-btn.sending::before { animation: glassRing 0.9s linear infinite; }
+
+
+  .comment-box {
+    display: none;
+    margin-top: 10px;
+  }
+  .comment-box.open { display: block; }
+
+  .comment-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .comment-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    direction: rtl;
+  }
+  .comment-input:focus { border-color: var(--accent); }
+
+  .comment-char-count {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: left;
+    margin-top: 4px;
+    direction: ltr;
+  }
+  .comment-char-count.over { color: var(--danger); }
+
+  /* Admin sees comments list */
+  .comments-list {
+    display: none;
+    margin-top: 10px;
+    flex-direction: column;
+    gap: 6px;
+  }
+  body:not(.admin-mode) .comments-list { display: none !important; }
+  body.admin-mode .comments-list { display: flex; }
+
+  .comment-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 7px 12px;
+    font-size: 0.82rem;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    color: var(--text);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .comment-item-text { flex: 1; word-break: break-word; }
+
+  .comment-item-date {
+    font-size: 0.72rem;
+    color: var(--muted);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .comment-delete-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    transition: color 0.2s;
+  }
+  .comment-delete-btn:hover { color: var(--danger); }
+
+  .comments-count-badge {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 0.65rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+
+  /* ===== VERIFYING MESSAGE ===== */
+  .comment-verifying {
+    display: none;
+    margin-top: 8px;
+    padding: 8px 14px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.22);
+    border: 1px solid rgba(255,255,255,0.45);
+    backdrop-filter: blur(14px) saturate(180%);
+    -webkit-backdrop-filter: blur(14px) saturate(180%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.65), 0 2px 10px rgba(0,0,0,0.07);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    color: rgba(60,60,90,0.85);
+    text-align: center;
+    direction: rtl;
+  }
+  body.dark .comment-verifying {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.14);
+    color: rgba(190,195,215,0.9);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 10px rgba(0,0,0,0.3);
+  }
+  .comment-verifying.visible { display: block; }
+
+  @keyframes verifyingPulse {
+    0%, 100% { opacity: 0.6; }
+    50%       { opacity: 1; }
+  }
+  .comment-verifying.visible {
+    display: block;
+    animation: verifyingPulse 1.4s ease-in-out infinite;
+  }
+  .comment-verifying.accepted {
+    animation: none !important;
+    background: #16a34a !important;
+    border-color: #16a34a !important;
+    color: #ffffff !important;
+    box-shadow: 0 3px 12px rgba(22,163,74,0.4) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    opacity: 1 !important;
+  }
+  .comment-verifying.banned {
+    animation: none !important;
+    background: #dc2626 !important;
+    border-color: #dc2626 !important;
+    color: #ffffff !important;
+    box-shadow: 0 3px 12px rgba(220,38,38,0.4) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    opacity: 1 !important;
+  }
+
+  /* ===== STAR CIRCLE BUTTON ===== */
+  .star-circle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: none;
+    cursor: pointer;
+    color: var(--muted);
+    transition: border-color 0.2s, color 0.2s, transform 0.15s;
+    flex-shrink: 0;
+  }
+  .star-circle-btn:hover {
+    border-color: #fbbf24;
+    color: #fbbf24;
+    transform: scale(1.1);
+  }
+  .star-circle-btn.rated {
+    border-color: #fbbf24;
+    color: #fbbf24;
+  }
+
+  /* ===== QUICK TAGS ===== */
+  .quick-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .quick-tag {
+    padding: 4px 11px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: 'Cairo', sans-serif;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+  .quick-tag:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(37,99,235,0.06);
+  }
+  .quick-tag.selected {
+    border-color: var(--accent);
+    color: #fff;
+    background: var(--accent);
+  }
+
+  /* ===== LOGIN MODAL ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 32px;
+    width: 100%;
+    max-width: 360px;
+    margin: 16px;
+  }
+
+  .modal h2 { font-size: 1.2rem; margin-bottom: 20px; }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+  .field input, .field textarea, .field select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: 'Cairo', inherit;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.2s;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .field textarea { min-height: 140px; resize: vertical; }
+
+  .error-msg { color: var(--danger); font-size: 0.85rem; margin-bottom: 12px; display: none; }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 4px; }
+
+  .btn-primary {
+    flex: 1;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 11px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .btn-primary:hover { background: #1d4ed8; }
+
+  .btn-secondary {
+    flex: 1;
+    background: none;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 11px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--text); color: var(--text); }
+
+  /* ===== ADMIN BAR ===== */
+  .admin-bar {
+    display: none;
+    background: #1e293b;
+    color: #fff;
+    padding: 12px 24px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  body.admin-mode .admin-bar { display: flex; }
+
+  .admin-bar span { font-size: 0.85rem; color: #94a3b8; }
+
+  .new-post-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 9px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .new-post-btn:hover { background: #1d4ed8; }
+
+  .logout-btn {
+    background: none;
+    border: 1px solid #475569;
+    color: #94a3b8;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .logout-btn:hover { border-color: #fff; color: #fff; }
+
+  /* ===== NEW POST MODAL ===== */
+  .type-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .type-tab {
+    flex: 1;
+    padding: 9px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+    font-size: 0.85rem;
+    text-align: center;
+    transition: all 0.2s;
+    color: var(--muted);
+  }
+  .type-tab.active {
+    border-color: var(--accent);
+    background: #eff6ff;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .type-fields { display: none; }
+  .type-fields.active { display: block; }
+
+  .image-upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 6px;
+    padding: 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .image-upload-area:hover { border-color: var(--accent); color: var(--accent); }
+
+  #imagePreview {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 6px;
+    margin-top: 10px;
+    display: none;
+  }
+
+  /* Knight helmet color per mode */
+  .knight-helmet path,
+  .knight-helmet line {
+    stroke: #000 !important;
+    fill: none;
+  }
+  .knight-helmet path[fill="white"] {
+    fill: rgba(0,0,0,0.08) !important;
+  }
+  body.dark .knight-helmet path,
+  body.dark .knight-helmet line {
+    stroke: #fff !important;
+  }
+  body.dark .knight-helmet path[fill="white"] {
+    fill: rgba(255,255,255,0.15) !important;
+  }
+  .mail-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    cursor: pointer;
+    color: #fff;
+    transition: background 0.2s, transform 0.15s;
+    position: relative;
+    flex-shrink: 0;
+  }
+  body.admin-mode .mail-btn { display: flex; }
+  .mail-btn:hover { background: rgba(255,255,255,0.22); transform: scale(1.08); }
+  .mail-badge {
+    display: none;
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ef4444;
+    color: #fff;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    align-items: center;
+    justify-content: center;
+  }
+  .mail-badge.visible { display: flex; }
+
+  /* ── MAIL PANEL ── */
+  .mail-panel {
+    display: none;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 20px;
+    direction: rtl;
+  }
+  .mail-panel.open { display: block; }
+  .mail-panel-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mail-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+  .mail-tab {
+    padding: 5px 14px;
+    border-radius: 8px;
+    border: none;
+    background: none;
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: 'Cairo', sans-serif;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.18s;
+  }
+  .mail-tab.active { background: var(--accent); color: #fff; }
+  .mail-items { display: flex; flex-direction: column; gap: 8px; max-height: 380px; overflow-y: auto; }
+  .mail-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .mail-item-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .mail-item-tag { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+  .mail-item-tag.note { background: rgba(99,179,237,0.15); color: #3b82f6; }
+  .mail-item-tag.rating { background: rgba(250,204,21,0.15); color: #d97706; }
+  .mail-item-date { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+  .mail-item-text { font-size: 0.88rem; color: var(--text); font-weight: 600; }
+  .mail-item-sub { font-size: 0.72rem; color: var(--muted); }
+  .mail-item-actions { display: flex; justify-content: flex-end; }
+  .mail-del-btn {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 0.72rem; padding: 2px 7px;
+    border-radius: 4px; transition: color 0.18s;
+  }
+  .mail-del-btn:hover { color: #ef4444; }
+  .mail-empty { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 24px 0; }
+
+  .info-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #7c3aed;
+    background: none;
+    color: #7c3aed;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .info-btn:hover { background: #7c3aed; color: #fff; }
+
+  .info-display {
+    max-width: 680px;
+    margin: 0 auto 0;
+    padding: 0 16px;
+    display: none;
+  }
+  .info-display.active { display: block; }
+
+
+
+  .info-box {
+    background: rgba(124,58,237,0.08);
+    border: 1px solid rgba(124,58,237,0.25);
+    border-radius: 14px;
+    padding: 18px 20px;
+    color: var(--text);
+    font-size: 0.92rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    backdrop-filter: blur(10px);
+    line-height: 1.8;
+  }
+
+  .info-edit-area {
+    display: none;
+  }
+  body.admin-mode .info-edit-area { display: flex; }
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1e293b;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: transform 0.3s;
+    z-index: 999;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.danger  { background: #dc2626; }
+  .toast.success { background: #16a34a; }
+
+  .hd-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    pointer-events: none;
+    user-select: none;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .platform-badge {
+    position: absolute;
+    top: 10px;
+    background: rgba(0,0,0,0.35);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    pointer-events: none;
+    user-select: none;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+
+  .platform-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 13px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 700;
+    transition: all 0.18s;
+    background: var(--bg);
+    color: var(--muted);
+    user-select: none;
+    letter-spacing: 0.3px;
+  }
+  .platform-option:hover { border-color: var(--accent); color: var(--accent); background: rgba(37,99,235,0.06); }
+  .platform-option.sel { color: var(--text); border-color: var(--text); background: transparent; }
+
+  /* ===== MAIL PAGE ===== */
+  .mail-page {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: var(--bg);
+    overflow-y: auto;
+    direction: rtl;
+  }
+  .mail-page.open { display: block; }
+
+  .mail-page-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .mail-page-back {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .mail-page-back:hover { border-color: var(--accent); color: var(--accent); }
+
+  .mail-page-title { font-size: 1.1rem; font-weight: 700; }
+
+  .mail-page-body {
+    max-width: 720px;
+    margin: 32px auto;
+    padding: 0 16px 60px;
+  }
+
+  .mail-page-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0;
+  }
+  .mail-page-tab {
+    padding: 10px 22px;
+    border: none;
+    background: none;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: 'Cairo', sans-serif;
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+  }
+  .mail-page-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .mail-page-stats {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .mail-stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 22px;
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+  }
+  .mail-stat-num { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+  .mail-stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+  .mail-page-items { display: flex; flex-direction: column; gap: 12px; }
+
+  .mail-page-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: box-shadow 0.2s;
+  }
+  .mail-page-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+
+  .mail-page-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .mail-page-item-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 8px;
+  }
+  .mail-page-item-tag.note { background: rgba(99,179,237,0.15); color: #3b82f6; }
+  .mail-page-item-tag.rating { background: rgba(250,204,21,0.15); color: #d97706; }
+
+  .mail-page-item-date { font-size: 0.75rem; color: var(--muted); }
+
+  .mail-page-item-text {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    letter-spacing: 0.2px;
+    line-height: 1.6;
+  }
+  .mail-page-item-post {
+    font-size: 0.78rem;
+    color: var(--muted);
+    padding: 6px 10px;
+    background: var(--bg);
+    border-radius: 8px;
+    border-right: 3px solid var(--border);
+  }
+  .mail-page-stars { font-size: 1.3rem; letter-spacing: 3px; }
+
+  .mail-page-del-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 5px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-family: 'Cairo', sans-serif;
+    transition: all 0.18s;
+    align-self: flex-end;
+    display: none;
+  }
+  body.admin-mode .mail-page-del-btn { display: inline-block; }
+  .mail-page-del-btn:hover { background: #fee2e2; color: #dc2626; border-color: #dc2626; }
+
+  .mail-page-empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 80px 20px;
+    font-size: 0.95rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <svg class="knight-helmet" width="28" height="28" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Knight helmet -->
+      <path d="M20 10 C20 10 14 14 13 24 L13 38 C13 42 16 45 20 46 L20 50 L44 50 L44 46 C48 45 51 42 51 38 L51 28 L38 20 L32 10 Z" fill="white" opacity="0.15" stroke="white" stroke-width="1.5"/>
+      <path d="M32 10 C32 10 26 12 22 18 C18 24 18 30 18 30 L46 30 L46 24 C46 24 42 14 32 10 Z" fill="white" opacity="0.25"/>
+      <path d="M13 28 L13 38 C13 43 17 47 22 48 L22 52 L42 52 L42 48 C47 47 51 43 51 38 L51 28 Z" fill="white" opacity="0.1" stroke="white" stroke-width="1.5"/>
+      <!-- Visor slits -->
+      <line x1="18" y1="34" x2="30" y2="34" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <line x1="18" y1="39" x2="30" y2="39" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <line x1="18" y1="44" x2="28" y2="44" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <!-- Plume -->
+      <path d="M32 10 C30 4 26 2 24 4 C22 6 24 10 28 12" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M32 10 C34 3 38 1 40 3 C42 5 39 9 35 11" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <!-- Outline -->
+      <path d="M32 10 L38 20 L51 28 L51 38 C51 43 47 47 42 48 L42 52 L22 52 L22 48 C17 47 13 43 13 38 L13 24 C14 14 20 10 32 10 Z" stroke="white" stroke-width="2" fill="none" stroke-linejoin="round"/>
+    </svg>
+    <div class="site-title" id="siteTitle">ZYNOK</div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <button class="admin-btn" id="darkToggle" onclick="toggleDark()" title="الوضع الداكن">
+      <svg id="iconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg id="iconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+    <button class="admin-btn" onclick="showLogin()">الإدارة</button>
+    <button class="info-btn" onclick="toggleInfo()" title="معلومات الموقع">i</button>
+    <button class="mail-btn" id="mailBtn" onclick="openMailPage()" title="البريد">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      <span class="mail-badge" id="mailBadge"></span>
+    </button></div>
+</header>
+
+<!-- INFO BOX -->
+<div class="info-display" id="infoDisplay">
+  <div style="margin-top:16px;">
+    <div class="info-box" id="infoBox">لا توجد معلومات بعد.</div>
+    <div class="info-edit-area" style="margin-top:10px;flex-direction:column;gap:8px;">
+      <textarea id="infoTextarea" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Cairo',sans-serif;font-size:0.9rem;background:var(--bg);color:var(--text);min-height:100px;resize:vertical;" placeholder="اكتب معلومات الموقع هنا..."></textarea>
+      <button onclick="saveInfo()" style="background:#7c3aed;color:#fff;border:none;padding:9px 20px;border-radius:6px;cursor:pointer;font-size:0.9rem;font-weight:600;align-self:flex-start;">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIL PANEL (admin only) - replaced by mail page -->
+<div style="display:none" id="mailPanel"></div><!-- ADMIN BAR -->
+<div class="admin-bar">
+  <span>وضع الإدارة — يمكنك إضافة وحذف المنشورات</span>
+  <div style="display:flex;gap:10px;">
+    <button class="new-post-btn" onclick="showNewPost()">+ منشور جديد</button>
+    <button class="logout-btn" onclick="logout()">خروج</button>
+  </div>
+</div>
+
+<!-- FEED -->
+<div class="feed" id="feed">
+  <div class="empty-feed" id="emptyFeed">لا توجد منشورات بعد</div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal">
+    <h2>دخول الإدارة</h2>
+    <div class="field">
+      <label>كلمة المرور</label>
+      <input type="password" id="passwordInput" placeholder="أدخل كلمة المرور" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <div class="error-msg" id="loginError">كلمة المرور غير صحيحة</div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="doLogin()">دخول</button>
+      <button class="btn-secondary" onclick="closeModal('loginModal')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW POST MODAL -->
+<div class="modal-overlay" id="postModal">
+  <div class="modal" style="max-width:520px;display:flex;flex-direction:column;max-height:85vh;">
+    <h2>منشور جديد</h2>
+
+    <div style="overflow-y:auto;flex:1;padding-bottom:4px;">
+    <div class="type-tabs">
+      <div class="type-tab active" onclick="switchType('image')">صورة</div>
+      <div class="type-tab" onclick="switchType('link')">رابط</div>
+      <div class="type-tab" onclick="switchType('text')">نص</div>
+      <div class="type-tab" onclick="switchType('tip')">نصيحة</div>
+    </div>
+
+    <div class="field">
+      <label>العنوان (اختياري)</label>
+      <input type="text" id="postTitle" placeholder="عنوان المنشور..." />
+    </div>
+
+    <!-- IMAGE FIELDS -->
+    <div class="type-fields active" id="fields-image">
+      <div class="field">
+        <div class="image-upload-area">
+          <button type="button" onclick="triggerImagePick()" style="background:var(--accent);color:#fff;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;font-size:0.95rem;">اختر صورة أو أكثر</button>
+          <p style="margin-top:8px;font-size:0.82rem;color:var(--muted)" id="imgFileName">لم يتم اختيار صور</p>
+          <div id="imagePreviews" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+        </div>
+        <input type="file" id="imgFile" accept="image/*" multiple style="position:absolute;left:-9999px;opacity:0;" onchange="previewImage(event)"/>
+      </div>
+      <div class="field">
+        <label>وصف الصور (اختياري)</label>
+        <textarea id="imageCaption" placeholder="اكتب وصفاً..."></textarea>
+      </div>
+      <div class="field">
+        <label>المنصات (اختياري)</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;" id="platformSelector">
+          <div class="platform-option" data-platform="PlayStation" data-key="ps" onclick="togglePlatform(this)">PlayStation</div>
+          <div class="platform-option" data-platform="Xbox" data-key="xbox" onclick="togglePlatform(this)">Xbox</div>
+          <div class="platform-option" data-platform="PC" data-key="pc" onclick="togglePlatform(this)">PC</div>
+          <div class="platform-option" data-platform="Nintendo Switch" data-key="ns" onclick="togglePlatform(this)">Nintendo</div>
+          <div class="platform-option" data-platform="Mobile" data-key="mob" onclick="togglePlatform(this)">Mobile</div>
+          <div class="platform-option" data-platform="VR" data-key="vr" onclick="togglePlatform(this)">VR</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LINK FIELDS -->
+    <div class="type-fields" id="fields-link">
+      <div class="field">
+        <label>الرابط</label>
+        <input type="url" id="linkUrl" placeholder="https://..." />
+      </div>
+      <div class="field">
+        <label>وصف الرابط (اختياري)</label>
+        <textarea id="linkDesc" placeholder="اكتب وصفاً..."></textarea>
+      </div>
+    </div>
+
+    <!-- TEXT FIELDS -->
+    <div class="type-fields" id="fields-text">
+      <div class="field">
+        <label>النص</label>
+        <textarea id="postText" style="min-height:200px" placeholder="اكتب نصك هنا..."></textarea>
+      </div>
+    </div>
+
+    <!-- TIP FIELDS -->
+    <div class="type-fields" id="fields-tip">
+      <div class="field">
+        <div class="image-upload-area">
+          <button type="button" onclick="triggerTipImagePick()" style="background:var(--accent);color:#fff;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;font-size:0.95rem;">اختر صورة للنصيحة</button>
+          <p style="margin-top:8px;font-size:0.82rem;color:var(--muted)" id="tipImgFileName">لم يتم اختيار صورة</p>
+          <img id="tipImagePreview" src="" alt="" style="max-width:100%;max-height:160px;border-radius:6px;margin-top:8px;display:none;"/>
+        </div>
+        <input type="file" id="tipImgFile" accept="image/*" style="position:absolute;left:-9999px;opacity:0;" onchange="previewTipImage(event)"/>
+      </div>
+      <div class="field">
+        <label>نص النصيحة</label>
+        <input type="text" id="tipText" placeholder="اكتب النصيحة هنا..." />
+      </div>
+      <div class="field">
+        <label>لون خلفية النصيحة</label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px;">
+          <input type="color" id="tipColor" value="#1e293b" style="width:40px;height:36px;border:none;border-radius:6px;cursor:pointer;background:none;"/>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <div onclick="setTipColor('#1e293b')" style="width:28px;height:28px;border-radius:6px;background:#1e293b;cursor:pointer;border:2px solid transparent;"></div>
+            <div onclick="setTipColor('#7c3aed')" style="width:28px;height:28px;border-radius:6px;background:#7c3aed;cursor:pointer;"></div>
+            <div onclick="setTipColor('#dc2626')" style="width:28px;height:28px;border-radius:6px;background:#dc2626;cursor:pointer;"></div>
+            <div onclick="setTipColor('#059669')" style="width:28px;height:28px;border-radius:6px;background:#059669;cursor:pointer;"></div>
+            <div onclick="setTipColor('#d97706')" style="width:28px;height:28px;border-radius:6px;background:#d97706;cursor:pointer;"></div>
+            <div onclick="setTipColor('#0369a1')" style="width:28px;height:28px;border-radius:6px;background:#0369a1;cursor:pointer;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    </div>
+    <div class="btn-row" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);flex-shrink:0;">
+      <button class="btn-primary" onclick="publishPost()">نشر</button>
+      <button class="btn-secondary" onclick="closeModal('postModal')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MAIL FULL PAGE -->
+<div class="mail-page" id="mailPageOverlay">
+  <div class="mail-page-header">
+    <button class="mail-page-back" onclick="closeMailPage()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="mail-page-title" style="display:flex;align-items:center;gap:8px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      البريد
+    </div>
+  </div>
+  <div class="mail-page-body">
+    <div class="mail-page-stats" id="mailPageStats"></div>
+    <div class="mail-page-tabs">
+      <button class="mail-page-tab active" id="mpTabNotes" onclick="switchMailPageTab('notes')" style="display:flex;align-items:center;gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        التعليقات
+      </button>
+      <button class="mail-page-tab" id="mpTabRatings" onclick="switchMailPageTab('ratings')" style="display:flex;align-items:center;gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        التقييمات
+      </button>
+    </div>
+    <div class="mail-page-items" id="mailPageItems"></div>
+  </div>
+</div>
+
+<script>
+  // ===== CONFIG =====
+  const ADMIN_PASSWORD = "ANIME TTT"; // ← غيّر كلمة المرور هنا
+  const SITE_TITLE = "ZYNOK";        // ← غيّر اسم موقعك هنا
+
+  // ===== STATE =====
+  let isAdmin = false;
+  let posts = JSON.parse(localStorage.getItem('posts') || '[]');
+  let currentType = 'image';
+  let selectedImageData = null;
+  let selectedPlatforms = [];
+
+  const PLATFORM_KEYS = {PlayStation:'ps',Xbox:'xbox',PC:'pc','Nintendo Switch':'ns',Mobile:'mob',VR:'vr'};
+
+  function togglePlatform(el) {
+    const p = el.dataset.platform;
+    const k = el.dataset.key;
+    if (selectedPlatforms.includes(p)) {
+      selectedPlatforms = selectedPlatforms.filter(x => x !== p);
+      el.classList.remove('sel', 'sel-' + k);
+    } else {
+      if (selectedPlatforms.length >= 2) { showToast('يمكنك اختيار منصتين فقط'); return; }
+      selectedPlatforms.push(p);
+      el.classList.add('sel', 'sel-' + k);
+    }
+  }
+
+  document.getElementById('siteTitle').textContent = SITE_TITLE;
+  document.title = SITE_TITLE;
+
+  // ===== RENDER =====
+  function render() {
+    const feed = document.getElementById('feed');
+    feed.innerHTML = '';
+
+    if (posts.length === 0) {
+      feed.innerHTML = '<div class="empty-feed">لا توجد منشورات بعد</div>';
+      return;
+    }
+
+    // المثبّتات أولاً ثم الباقي
+    const sorted = [...posts].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+
+    sorted.forEach((post) => {
+      const i = posts.indexOf(post);
+      const card = document.createElement('div');
+      card.className = 'post-card' + (post.pinned ? ' is-pinned' : '');
+
+      const date = new Date(post.date).toLocaleDateString('ar-SA', {
+        year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit'
+      });
+
+      const typeLabel = {image:'صورة', link:'رابط', text:'نص', tip:'نصيحة'}[post.type] || 'منشور';
+      const badgeClass = {image:'badge-image', link:'badge-link', text:'badge-text', tip:'badge-tip'}[post.type] || 'badge-text';
+      const pinnedBadge = post.pinned ? `<span class="pinned-badge">مثبّت</span>` : '';
+
+      let bodyHTML = '';
+
+      if (post.type === 'tip') {
+        bodyHTML = `
+          ${post.title ? `<div class="post-title">${esc(post.title)}</div>` : ''}
+          <div style="position:relative;border-radius:10px;overflow:hidden;min-height:160px;">
+            ${post.tipImage
+              ? `<img src="${post.tipImage}" style="width:100%;max-height:320px;min-height:160px;object-fit:cover;display:block;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;pointer-events:none;" draggable="false" oncontextmenu="return false"/>`
+              : `<div style="height:160px;background:${esc(post.tipColor)};"></div>`}
+            <div class="tip-card-footer">
+              <span class="tip-label">نصيحة</span>
+              <span class="tip-text">${esc(post.tipText)}</span>
+            </div>
+          </div>
+        `;
+
+      } else if (post.type === 'image') {
+        const imgs = post.images || (post.imageData ? [post.imageData] : []);
+        const gridStyle = imgs.length > 1
+          ? 'display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-top:12px;'
+          : 'margin-top:12px;';
+        const platformBadges = (post.platforms && post.platforms.length)
+          ? post.platforms.map((p,pi) => {
+              const rightOffset = 10 + pi * 75;
+              return `<span class="platform-badge" style="right:${rightOffset}px;top:10px;">${p}</span>`;
+            }).join('')
+          : '';
+        const imgTags = imgs.map(src =>
+          `<div class="post-image-wrapper" style="position:relative;display:inline-block;width:100%;">
+            <img src="${src}" alt="" style="width:100%;${imgs.length>1?'height:140px;object-fit:cover;':'max-height:480px;object-fit:cover;'}border-radius:6px;display:block;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;pointer-events:none;" draggable="false" oncontextmenu="return false"/>
+            <span class="hd-badge">HD</span>
+            ${platformBadges}
+          </div>`
+        ).join('');
+        bodyHTML = `
+          ${post.title ? `<div class="post-title">${esc(post.title)}</div>` : ''}
+          <div style="${gridStyle}">${imgTags}</div>
+          ${post.caption ? `<div class="post-content" style="margin-top:10px">${esc(post.caption)}</div>` : ''}
+        `;
+      } else if (post.type === 'link') {
+        let domainName = post.url;
+        let siteName = post.url;
+        let linkColor = '#2563eb';
+        try {
+          const u = new URL(post.url);
+          domainName = u.hostname.replace('www.', '');
+          siteName = domainName.split('.')[0];
+          siteName = siteName.charAt(0).toUpperCase() + siteName.slice(1);
+        } catch(e) {}
+
+        // لون مخصص لكل موقع مشهور
+        const colors = {
+          'youtube': '#ff0000',
+          'twitter': '#1d9bf0',
+          'x': '#000000',
+          'instagram': '#e1306c',
+          'facebook': '#1877f2',
+          'tiktok': '#010101',
+          'discord': '#5865f2',
+          'reddit': '#ff4500',
+          'twitch': '#9146ff',
+          'github': '#333',
+          'spotify': '#1db954',
+          'steam': '#1b2838',
+          'google': '#4285f4',
+          'wikipedia': '#000',
+        };
+        const key = siteName.toLowerCase();
+        if (colors[key]) linkColor = colors[key];
+
+        bodyHTML = `
+          ${post.title ? `<div class="post-title">${esc(post.title)}</div>` : ''}
+          <a class="post-link" href="#" onclick="interceptLink(event,'${post.url.replace(/'/g,'&#39;')}')" style="border-color:${linkColor};color:${linkColor};">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            ${esc(siteName)}
+          </a>
+          ${post.desc ? `<div class="post-content" style="margin-top:10px">${esc(post.desc)}</div>` : ''}
+        `;
+      } else {
+        const isLong = post.text && post.text.length > 400;
+        const postId = 'post-' + i;
+        bodyHTML = `
+          ${post.title ? `<div class="post-title">${esc(post.title)}</div>` : ''}
+          <div class="post-content ${isLong ? 'collapsed' : ''}" id="${postId}">${esc(post.text)}</div>
+          ${isLong ? `<button class="read-more-btn" onclick="toggleReadMore('${postId}', this)">اقرأ المزيد ▼</button>` : ''}
+        `;
+      }
+
+        const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '{}');
+        const myLike = !!likedPosts[i];
+        const likesCount = posts[i].likes || 0;
+
+        const postComments = (posts[i].comments || []);
+        const commentsCount = postComments.length;
+        const commentsListHTML = postComments.map((c, ci) => `
+          <div class="comment-item">
+            <span class="comment-item-text">${esc(c.text)}</span>
+            <span class="comment-item-date">${new Date(c.date).toLocaleDateString('ar-SA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+            <button class="comment-delete-btn" onclick="deleteComment(${i},${ci})">✕</button>
+          </div>
+        `).join('');
+
+        card.innerHTML = `
+        <div class="post-meta">
+          <span style="display:flex;align-items:center;gap:6px;">${date} ${pinnedBadge}</span>
+          <span class="post-type-badge ${badgeClass}">${typeLabel}</span>
+        </div>
+        <div class="post-body">${bodyHTML}</div>
+        <div class="post-footer">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="like-btn ${myLike ? 'liked' : ''}" onclick="toggleLike(${i}, this)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="${myLike ? '#ffffff' : 'none'}" stroke="${myLike ? '#ffffff' : 'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+              <span>${isAdmin ? likesCount : ''}</span>
+            </button>
+            <button class="star-circle-btn" onclick="toggleRatingBox('rb-${i}')" title="تقييم">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+            <button class="comment-toggle-btn" onclick="toggleCommentBox('cb-${i}')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              ملاحظة
+              ${commentsCount > 0 && isAdmin ? `<span class="comments-count-badge">${commentsCount}</span>` : ''}
+            </button>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <button class="pin-post-btn ${post.pinned ? 'pinned' : ''}" onclick="togglePin(${i})">${post.pinned ? 'إلغاء التثبيت' : 'تثبيت'}</button>
+            <button class="delete-post-btn" onclick="deletePost(${i})">حذف</button>
+          </div>
+        </div>
+        <div class="comment-section" style="padding-top:0;border-top:none;">
+          <div class="rating-box" id="rb-${i}">
+            <button class="star-btn" onclick="submitRating(${i}, 1, this)">&#9733;</button>
+            <button class="star-btn" onclick="submitRating(${i}, 2, this)">&#9733;</button>
+            <button class="star-btn" onclick="submitRating(${i}, 3, this)">&#9733;</button>
+            <button class="star-btn" onclick="submitRating(${i}, 4, this)">&#9733;</button>
+            <button class="star-btn" onclick="submitRating(${i}, 5, this)">&#9733;</button>
+            <span class="rating-sent-msg" id="rmsg-${i}"></span>
+          </div>
+          <div class="comments-list" id="clist-${i}" style="display:none;">${commentsListHTML}</div>
+          <div class="comment-box" id="cb-${i}">
+            <div class="quick-tags" id="qtags-${i}">
+              <button class="quick-tag" onclick="selectQuickTag(${i}, 'لعبة جيدة', this)">لعبة جيدة</button>
+              <button class="quick-tag" onclick="selectQuickTag(${i}, 'تطبيق جيد', this)">تطبيق جيد</button>
+              <button class="quick-tag" onclick="selectQuickTag(${i}, 'رائع', this)">رائع</button>
+              <button class="quick-tag" onclick="selectQuickTag(${i}, 'مفيد جداً', this)">مفيد جداً</button>
+            </div>
+            <div class="comment-input-row">
+              <input class="comment-input" id="cinput-${i}" type="text" maxlength="15" placeholder="" oninput="updateCharCount(${i}, this)" />
+              <button class="comment-send-btn" id="csend-${i}" onclick="submitComment(${i})">
+                <svg class="send-icon-${i}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </div>
+            <div class="comment-char-count" id="ccount-${i}">0 / 15</div>
+            <div class="comment-verifying" id="cverify-${i}">جار التحقق من أمان الملاحظة</div>
+          </div>
+        </div>
+      `;
+
+      feed.appendChild(card);
+    });
+  }
+
+  function toggleReadMore(id, btn) {
+    const el = document.getElementById(id);
+    if (el.classList.contains('collapsed')) {
+      el.classList.remove('collapsed');
+      btn.textContent = 'اقرأ أقل ▲';
+    } else {
+      el.classList.add('collapsed');
+      btn.textContent = 'اقرأ المزيد ▼';
+    }
+  }
+
+  // ===== COMMENTS =====
+  function toggleCommentBox(id) {
+    const box = document.getElementById(id);
+    if (box) box.classList.toggle('open');
+  }
+
+  function selectQuickTag(i, text, btn) {
+    const input = document.getElementById('cinput-' + i);
+    if (!input) return;
+    // toggle — اذا نفس الكلمة اضغط مرة ثانية يلغيها
+    if (input.value === text) {
+      input.value = '';
+      btn.classList.remove('selected');
+    } else {
+      input.value = text;
+      // ازل selected من بقية الأزرار
+      const tags = document.getElementById('qtags-' + i);
+      if (tags) tags.querySelectorAll('.quick-tag').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    }
+    updateCharCount(i, input);
+  }
+
+  function toggleRatingBox(id) {
+    const box = document.getElementById(id);
+    if (box) box.classList.toggle('open');
+  }
+
+  function submitRating(postIdx, stars, clickedStar) {
+    const box = document.getElementById('rb-' + postIdx);
+    const msg = document.getElementById('rmsg-' + postIdx);
+    if (!box) return;
+
+    // تلوين النجوم المختارة فقط
+    const allStars = box.querySelectorAll('.star-btn');
+    allStars.forEach((s, idx) => {
+      s.classList.remove('active');
+      s.classList.toggle('submitted', idx < stars);
+    });
+
+    // حفظ التقييم
+    if (!posts[postIdx].ratings) posts[postIdx].ratings = [];
+    posts[postIdx].ratings.push({ stars, date: new Date().toISOString() });
+    save();
+
+    // رسالة تأكيد
+    if (msg) {
+      msg.textContent = stars === 1 ? 'اكتب مشكلتك في قسم الملاحظات' : 'شكراً على تقييمك';
+      msg.classList.add('visible');
+    }
+  }
+
+  function updateCharCount(i, input) {
+    const countEl = document.getElementById('ccount-' + i);
+    if (!countEl) return;
+    const len = input.value.length;
+    countEl.textContent = len + ' / 15';
+    countEl.classList.toggle('over', len > 15);
+  }
+
+  // ===== CONTENT FILTER =====
+
+  function hasEmoji(str) {
+    const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27FF}\u{FE00}-\u{FE0F}\u{1F000}-\u{1F9FF}\u{200D}\u{FE0F}]/u;
+    return emojiRegex.test(str);
+  }
+
+  function normalizeText(str) {
+    return str
+      .toLowerCase()
+      .replace(/[\s\-_.,!@#$%^&*()؟،\.]/g, '')
+      .replace(/0/g, 'o').replace(/1/g, 'i').replace(/3/g, 'e')
+      .replace(/4/g, 'a').replace(/5/g, 's')
+      .replace(/ـ/g, '')
+      .replace(/(..)\1{2,}/g, '$1$1');
+  }
+
+  const BANNED_WORDS = [
+    // ===== شتائم وإهانات مباشرة =====
+    'كلب','كلاب','يا كلب','كلبة','ابن الكلب','بنت الكلب',
+    'حمار','حمير','يا حمار','حمارة',
+    'خنزير','خنازير','يا خنزير','قرد','قردة','قرود',
+    'بعير','جحش','بغل','ثور','حيوان','بهيمة',
+    'غبي','غبية','أغبياء','ما أغباك',
+    'احمق','أحمق','حمقاء','حماقة',
+    'معتوه','معتوهة','معتوهين',
+    'أبله','بلهاء','بله',
+    'هبيل','هبيلة','هبايل',
+    'مهبول','مهبولة','مهابيل',
+    'متخلف','متخلفة','متخلفين',
+    'ناقص','ناقصة','منقوص','منقوصة',
+    'تافه','تافهة','تفاهة',
+    'فاشل','فاشلة','فاشلين',
+    'خسيس','خسيسة','دنيء','دنيئة',
+    'حقير','حقيرة','حقراء',
+    'وضيع','وضيعة','أوضياء',
+    'نذل','نذلة','أنذال',
+    'جبان','جبانة','جبناء',
+    'كذاب','كذابة','كذابين','كذب عليك',
+    'نصاب','نصابة','نصابين',
+    'غشاش','غشاشة','غشاشين',
+    'محتال','محتالة','محتالين',
+    'حرامي','حرامية','لص','لصوص',
+    'سارق','سارقة','سراق',
+    'خائن','خائنة','خونة',
+    'منافق','منافقة','منافقين',
+    'فاجر','فاجرة','فجار',
+    'فاسق','فاسقة','فساق',
+    'ساقط','ساقطة','ساقطين',
+    'وسخ','وسخة','أوساخ',
+    'قذر','قذرة','أقذار',
+    'نجس','نجسة','أنجاس',
+    'معفن','معفنة','متعفن','متعفنة',
+    'زبالة','زبال','نفاية','نفايات',
+    'حثالة','حثال',
+    'سافل','سافلة','سفلة',
+    'خبيث','خبيثة','خبثاء',
+    'شرير','شريرة','أشرار',
+    'لئيم','لئيمة','لؤماء',
+    'بليد','بليدة','بلداء',
+    'مقرف','مقرفة','مقرفين',
+    'كريه','كريهة','بغيض','بغيضة',
+    'رذيل','رذيلة','أرذال',
+    // ===== أعضاء الجسم (ذكر/أنثى) =====
+    'زب','زبر','قضيب','أير','كس','فرج','بظر','خصية','خصيتين','صدر','نهد','نهود',
+    'حلمة','مؤخرة','طيز','شرج','مهبل','رحم','بيضة','بيض','عانة',
+    'ثدي','أثداء','جهازه','جهازها','عضوه','عضوها',
+    'عورة','سوأة','مفاتنها','مفاتنه',
+    // ===== ألفاظ جنسية وإباحية =====
+    'خرا','خرة','زفت','قحبة','شرموطة','شرموط','ديوث','قواد',
+    'زق','زقة','منيوك','منيوكة',
+    'عاهرة','عاهر','عهر','دعارة',
+    'فاحشة','فحش','فاحش',
+    'جنس','جنسي','جنسية','ممارسة الجنس',
+    'نيك','ينيك','تنيك','ناك','نائك',
+    'مص','لحس','تلحيس',
+    'إباحي','إباحية','بورن','بورنو',
+    'هنتاي','هينتاي','hentai','porn','sex','sexy',
+    'منحرف','منحرفة','منحرفين','انحراف',
+    'متحرش','تحرش','مغتصب','اغتصاب',
+    'فاجرة','فاجر',
+    'شهواني','شهوانية','شبق','شهوة',
+    'إثارة جنسية','مثير جنسياً',
+    'عري','عارية','عاري',
+    // ===== لعن وسب =====
+    'الله ينعل','ينعل','لعنة','يلعن','العن','ألعن',
+    'لعنك','يلعنك','يلعن أبوك','ينعل أبوك',
+    'يلعن دينك','العن دينك','يلعن أمك','الله ينعاك','ينعاك',
+    'اللعنة عليك','ملعون','ملعونة',
+    // ===== كلمات مشفرة بحروف لاتينية وأرقام =====
+    'w9','w3','zaml','zmml','zml',
+    'wa9','wa3','wlad','wld9hba',
+    '7mar','7mara','klb','k1b','q7ba',
+    'sharmo','shar6','6iz','tiz','ks',
+    'nyk','ny8','naik','na2k',
+    'kh','khra','khara','5ara','5raa',
+    '3ahra','3ahera','9a7ba','qa7ba',
+    // ===== تهديدات وعنف =====
+    'اقتلك','أقتلك','سأقتلك','هأقتلك',
+    'اذبحك','أذبحك','سأذبحك',
+    'اضربك','سأضربك','أكسر',
+    'انتقم','سأنتقم',
+    'انتحر','موت','اختفي','روح مت',
+    'أرميك','أدفنك',
+    // ===== مضايقة واستفزاز =====
+    'ما تسوى','لا تسوى','ما تستاهل',
+    'مش كفء','غير كفء','عاجز','عاجزة',
+    'محقور','محقورة','محتقر','محتقرة',
+    'منبوذ','منبوذة',
+    // ===== كلمات سلبية =====
+    'احتيال','نصب','غش','تدليس',
+    'مزيف','مزيفة','زائف','زائفة',
+    'كارثة','فضيحة','خراب',
+    'همجي','همجية','بربري','وحشي',
+    // ===== إنجليزية =====
+    'fuck','shit','bitch','ass','damn','crap','pussy','dick','cock',
+    'bastard','whore','wtf','stfu','kys','retard','moron','imbecile',
+    'idiot','stupid','loser','dumb','jerk','scum','trash','slut','rape',
+    'fak','fuc','fck','sht','btch','fk','b1tch','@ss','d1ck',
+    // ===== ضحك مبالغ =====
+    'هههههه','ههههه','هههههههه',
+  ];
+
+  function hasBannedWord(str) {
+    const normalized = normalizeText(str);
+    const original = str.toLowerCase().replace(/\s+/g, ' ').trim();
+    for (const word of BANNED_WORDS) {
+      const normWord = normalizeText(word);
+      if (normalized.includes(normWord)) return true;
+      if (original.includes(word.toLowerCase())) return true;
+    }
+    return false;
+  }
+
+  function submitComment(i) {
+    const input = document.getElementById('cinput-' + i);
+    const sendBtn = document.getElementById('csend-' + i);
+    const verifyMsg = document.getElementById('cverify-' + i);
+    if (!input || !sendBtn) return;
+    const text = input.value.trim();
+
+    if (!text) { showToast('اكتب ملاحظة أولاً'); return; }
+    if (text.length > 15) { showToast('الملاحظة يجب ألا تتجاوز 15 حرفاً'); return; }
+    if (hasEmoji(text)) { showToast('الإيموجي غير مسموح به'); return; }
+
+    // إظهار رسالة التحقق دائماً — سواء كان التعليق نظيفاً أم لا
+    const isBanned = hasBannedWord(text);
+    sendBtn.classList.add('sending');
+    input.disabled = true;
+    if (verifyMsg) verifyMsg.classList.add('visible');
+
+    setTimeout(() => {
+      sendBtn.classList.remove('sending');
+      input.disabled = false;
+
+      if (isBanned) {
+        if (verifyMsg) {
+          verifyMsg.textContent = 'تم حظر ملاحظتك';
+          verifyMsg.classList.remove('visible');
+          verifyMsg.classList.add('visible', 'banned');
+        }
+        input.value = '';
+        const countEl = document.getElementById('ccount-' + i);
+        if (countEl) countEl.textContent = '0 / 15';
+        setTimeout(() => {
+          if (verifyMsg) { verifyMsg.classList.remove('visible','banned'); verifyMsg.textContent = 'جار التحقق من أمان الملاحظة'; }
+        }, 2500);
+      } else {
+        if (verifyMsg) {
+          verifyMsg.textContent = 'تم قبول ملاحظتك';
+          verifyMsg.classList.remove('visible');
+          verifyMsg.classList.add('visible', 'accepted');
+        }
+        if (!posts[i].comments) posts[i].comments = [];
+        posts[i].comments.push({ text, date: new Date().toISOString() });
+        save();
+        setTimeout(() => {
+          if (verifyMsg) { verifyMsg.classList.remove('visible','accepted'); verifyMsg.textContent = 'جار التحقق من أمان الملاحظة'; }
+          render();
+        }, 2000);
+      }
+    }, 5000);
+  }
+
+  function deleteComment(postIdx, commentIdx) {
+    if (!posts[postIdx] || !posts[postIdx].comments) return;
+    posts[postIdx].comments.splice(commentIdx, 1);
+    save();
+    render();
+    showToast('تم حذف الملاحظة');
+  }
+
+  function esc(str) {
+    return String(str||'')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  // ===== LOGIN =====
+  function showLogin() {
+    if (isAdmin) { logout(); return; }
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('loginModal').classList.add('active');
+    setTimeout(() => document.getElementById('passwordInput').focus(), 100);
+  }
+
+  function doLogin() {
+    const pw = document.getElementById('passwordInput').value;
+    if (pw === ADMIN_PASSWORD) {
+      isAdmin = true;
+      document.body.classList.add('admin-mode');
+      document.querySelector('.admin-btn').textContent = '✓ إدارة';
+      closeModal('loginModal');
+      showToast('مرحباً! أنت الآن في وضع الإدارة');
+      render();
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+    }
+  }
+
+  function logout() {
+    isAdmin = false;
+    document.body.classList.remove('admin-mode');
+    document.querySelector('.admin-btn').textContent = '⚙ الإدارة';
+    render();
+    showToast('تم الخروج من وضع الإدارة');
+  }
+
+  // ===== NEW POST =====
+  function showNewPost() {
+    document.getElementById('postTitle').value = '';
+    document.getElementById('imageCaption').value = '';
+    document.getElementById('linkUrl').value = '';
+    document.getElementById('linkDesc').value = '';
+    document.getElementById('postText').value = '';
+    document.getElementById('tipText').value = '';
+    document.getElementById('tipImgFileName').textContent = 'لم يتم اختيار صورة';
+    document.getElementById('tipImagePreview').style.display = 'none';
+    selectedTipImageData = null;
+    document.getElementById('imagePreviews').innerHTML = '';
+    const fn = document.getElementById('imgFileName');
+    if (fn) fn.textContent = 'لم يتم اختيار صور';
+    selectedImageData = null;
+    selectedPlatforms = [];
+    document.querySelectorAll('.platform-option').forEach(el => {
+      el.classList.remove('sel','sel-ps','sel-xbox','sel-pc','sel-ns','sel-mob','sel-vr');
+    });
+    switchType('image');
+    document.getElementById('postModal').classList.add('active');
+  }
+
+  function switchType(type) {
+    currentType = type;
+    document.querySelectorAll('.type-tab').forEach((t,i) => {
+      t.classList.toggle('active', ['image','link','text','tip'][i] === type);
+    });
+    document.querySelectorAll('.type-fields').forEach(f => f.classList.remove('active'));
+    document.getElementById('fields-' + type).classList.add('active');
+  }
+
+  let selectedTipImageData = null;
+
+  function setTipColor(color) {
+    document.getElementById('tipColor').value = color;
+  }
+
+  function triggerTipImagePick() {
+    const inp = document.getElementById('tipImgFile');
+    inp.value = '';
+    inp.click();
+  }
+
+  function previewTipImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    document.getElementById('tipImgFileName').textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      selectedTipImageData = ev.target.result;
+      const preview = document.getElementById('tipImagePreview');
+      preview.src = selectedTipImageData;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function triggerImagePick() {
+    const inp = document.getElementById('imgFile');
+    inp.value = '';
+    inp.click();
+  }
+
+  function previewImage(e) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    selectedImageData = [];
+    document.getElementById('imgFileName').textContent = `تم اختيار ${files.length} صورة`;
+    const container = document.getElementById('imagePreviews');
+    container.innerHTML = '';
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        selectedImageData.push(ev.target.result);
+        const img = document.createElement('img');
+        img.src = ev.target.result;
+        img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border);';
+        container.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function publishPost() {
+    const title = document.getElementById('postTitle').value.trim();
+    let post = { type: currentType, title, date: new Date().toISOString() };
+
+    if (currentType === 'image') {
+      if (!selectedImageData || !selectedImageData.length) { showToast('اختر صورة أولاً'); return; }
+      post.images = selectedImageData;
+      post.caption = document.getElementById('imageCaption').value.trim();
+      post.platforms = selectedPlatforms.slice();
+    } else if (currentType === 'link') {
+      const url = document.getElementById('linkUrl').value.trim();
+      if (!url) { showToast('أدخل رابطاً'); return; }
+      post.url = url;
+      post.desc = document.getElementById('linkDesc').value.trim();
+    } else if (currentType === 'tip') {
+      const tipText = document.getElementById('tipText').value.trim();
+      if (!tipText) { showToast('اكتب النصيحة أولاً'); return; }
+      post.tipText = tipText;
+      post.tipColor = document.getElementById('tipColor').value || '#1e293b';
+      post.tipImage = selectedTipImageData || null;
+    } else {
+      const text = document.getElementById('postText').value.trim();
+      if (!text) { showToast('أدخل نصاً'); return; }
+      post.text = text;
+    }
+
+    posts.unshift(post);
+    save();
+    render();
+    closeModal('postModal');
+    showToast('تم النشر بنجاح');
+  }
+
+  function toggleLike(i, btn) {
+    if (isAdmin) return;
+
+    // إعجابات شخصية مخزنة في المتصفح
+    const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '{}');
+    const liked = likedPosts[i];
+
+    if (liked) {
+      delete likedPosts[i];
+      posts[i].likes = Math.max((posts[i].likes || 1) - 1, 0);
+    } else {
+      likedPosts[i] = true;
+      posts[i].likes = (posts[i].likes || 0) + 1;
+    }
+
+    localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
+    save();
+
+    // انميشن
+    btn.classList.remove('pop');
+    void btn.offsetWidth;
+    btn.classList.add('pop');
+    btn.classList.toggle('liked', !liked);
+
+    const svg = btn.querySelector('svg');
+    svg.setAttribute('fill', !liked ? '#ef4444' : 'none');
+    svg.setAttribute('stroke', !liked ? '#ef4444' : 'currentColor');
+
+    // عدد الإعجابات للأدمن فقط
+    const countEl = btn.querySelector('span');
+    if (countEl) countEl.textContent = isAdmin ? (posts[i].likes || 0) : '';
+  }
+
+  function togglePin(i) {
+    posts[i].pinned = !posts[i].pinned;
+    save();
+    render();
+    showToast(posts[i].pinned ? 'تم تثبيت المنشور' : 'تم إلغاء التثبيت');
+  }
+
+  function deletePost(i) {
+    if (!confirm('هل تريد حذف هذا المنشور؟')) return;
+    posts.splice(i, 1);
+    save();
+    render();
+    showToast('تم الحذف');
+  }
+
+  // ===== UTILS =====
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+  }
+
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
+  });
+
+  function save() {
+    try { localStorage.setItem('posts', JSON.stringify(posts)); } catch(e) {}
+  }
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.remove('danger', 'success');
+    if (type === 'danger')  t.classList.add('danger');
+    if (type === 'success') t.classList.add('success');
+    t.classList.add('show');
+    setTimeout(() => { t.classList.remove('show', 'danger', 'success'); }, 3000);
+  }
+
+  // ===== INFO =====
+  let infoText = localStorage.getItem('siteInfo') || '';
+
+  function renderInfo() {
+    const box = document.getElementById('infoBox');
+    const textarea = document.getElementById('infoTextarea');
+    box.textContent = infoText || 'لا توجد معلومات بعد.';
+    textarea.value = infoText;
+  }
+
+  function toggleInfo() {
+    const el = document.getElementById('infoDisplay');
+    el.classList.toggle('active');
+    if (el.classList.contains('active')) renderInfo();
+  }
+
+  function saveInfo() {
+    infoText = document.getElementById('infoTextarea').value.trim();
+    localStorage.setItem('siteInfo', infoText);
+    renderInfo();
+    showToast('تم حفظ المعلومات');
+  }  // ===== LINK SAFETY =====
+  let _safeUrl = '';
+  let _verifyTimer = null;
+
+  function interceptLink(e, url) {
+    e.preventDefault();
+    _safeUrl = url;
+    const overlay = document.getElementById('linkSafetyOverlay');
+    const status  = document.getElementById('linkModalStatus');
+    const bar     = document.getElementById('linkProgressBar');
+    const btns    = document.getElementById('linkModalBtns');
+
+    // reset
+    status.textContent = 'جار التحقق من أمان الرابط';
+    status.style.color = 'rgba(50,50,80,0.9)';
+    
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    bar.style.background = 'linear-gradient(90deg,#60a5fa,#a78bfa)';
+    btns.style.display = 'none';
+    overlay.style.display = 'flex';
+
+    // start progress bar
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        bar.style.transition = 'width 7s linear';
+        bar.style.width = '100%';
+      });
+    });
+
+    // after 7 seconds — verified
+    _verifyTimer = setTimeout(() => {
+      status.textContent = 'تم التحقق من أمان الرابط';
+      status.style.color = '#16a34a';
+      
+      bar.style.background = '#16a34a';
+      btns.style.display = 'flex';
+    }, 7000);
+  }
+
+  function openSafeLink() {
+    if (_safeUrl) window.open(_safeUrl, '_blank', 'noopener');
+    closeLinkModalBtn();
+  }
+
+  function closeLinkModalBtn() {
+    clearTimeout(_verifyTimer);
+    document.getElementById('linkSafetyOverlay').style.display = 'none';
+    _safeUrl = '';
+  }
+
+  function closeLinkModal(e) {
+    // إغلاق عند الضغط على الخلفية فقط
+    if (e.target === document.getElementById('linkSafetyOverlay')) closeLinkModalBtn();
+  }
+
+  // ===== MAIL PAGE =====
+  let _mailPageTab = 'notes';
+
+  function openMailPage() {
+    document.getElementById('mailPageOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    renderMailPage();
+  }
+
+  function closeMailPage() {
+    document.getElementById('mailPageOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function switchMailPageTab(tab) {
+    _mailPageTab = tab;
+    document.getElementById('mpTabNotes').classList.toggle('active', tab === 'notes');
+    document.getElementById('mpTabRatings').classList.toggle('active', tab === 'ratings');
+    renderMailPage();
+  }
+
+  function renderMailPage() {
+    // إحصائيات
+    let totalComments = 0, totalRatings = 0, totalStars = 0;
+    posts.forEach(p => {
+      totalComments += (p.comments || []).length;
+      (p.ratings || []).forEach(r => { totalRatings++; totalStars += r.stars; });
+    });
+    const avgStars = totalRatings > 0 ? (totalStars / totalRatings).toFixed(1) : '—';
+
+    document.getElementById('mailPageStats').innerHTML = `
+      <div class="mail-stat-card">
+        <div class="mail-stat-num">${totalComments}</div>
+        <div class="mail-stat-label">تعليق</div>
+      </div>
+      <div class="mail-stat-card">
+        <div class="mail-stat-num">${totalRatings}</div>
+        <div class="mail-stat-label">تقييم</div>
+      </div>
+      <div class="mail-stat-card">
+        <div class="mail-stat-num" style="color:#fbbf24">${avgStars} ★</div>
+        <div class="mail-stat-label">متوسط النجوم</div>
+      </div>`;
+
+    const container = document.getElementById('mailPageItems');
+    container.innerHTML = '';
+
+    let items = [];
+    posts.forEach((post, pi) => {
+      const snippet = (post.title || post.text || post.url || post.tipText || '').substring(0, 40) || 'منشور';
+      if (_mailPageTab === 'notes') {
+        (post.comments || []).forEach((c, ci) => {
+          items.push({ type: 'note', postIdx: pi, idx: ci, text: c.text, date: c.date, snippet });
+        });
+      } else {
+        (post.ratings || []).forEach((r, ri) => {
+          items.push({ type: 'rating', postIdx: pi, idx: ri, stars: r.stars, date: r.date, snippet });
+        });
+      }
+    });
+
+    items.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    if (items.length === 0) {
+      const emptyIcon = _mailPageTab === 'notes'
+        ? `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:10px;opacity:0.4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`
+        : `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:10px;opacity:0.4"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+      container.innerHTML = `<div class="mail-page-empty" style="display:flex;flex-direction:column;align-items:center;">${emptyIcon}${_mailPageTab === 'notes' ? 'لا توجد تعليقات بعد' : 'لا توجد تقييمات بعد'}</div>`;
+      return;
+    }
+
+    items.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'mail-page-item';
+      const dateStr = new Date(item.date).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+      if (item.type === 'note') {
+        div.innerHTML = `
+          <div class="mail-page-item-header">
+            <span class="mail-page-item-tag note" style="display:inline-flex;align-items:center;gap:5px;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              تعليق
+            </span>
+            <span class="mail-page-item-date">${dateStr}</span>
+          </div>
+          <div class="mail-page-item-text">${esc(item.text)}</div>
+          <div class="mail-page-item-post" style="display:flex;align-items:center;gap:6px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            على: ${esc(item.snippet)}...
+          </div>
+          <button class="mail-page-del-btn" onclick="mailPageDeleteNote(${item.postIdx},${item.idx})" style="display:inline-flex;align-items:center;gap:5px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></polyline></svg>
+            حذف التعليق
+          </button>`;
+        if (isAdmin) div.querySelector('.mail-page-del-btn').style.display = 'inline-flex';
+      } else {
+        const filled = '★'.repeat(item.stars);
+        const empty  = '☆'.repeat(5 - item.stars);
+        div.innerHTML = `
+          <div class="mail-page-item-header">
+            <span class="mail-page-item-tag rating" style="display:inline-flex;align-items:center;gap:5px;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              تقييم
+            </span>
+            <span class="mail-page-item-date">${dateStr}</span>
+          </div>
+          <div class="mail-page-stars" style="color:#fbbf24">${filled}<span style="color:var(--border)">${empty}</span></div>
+          <div class="mail-page-item-post" style="display:flex;align-items:center;gap:6px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            على: ${esc(item.snippet)}...
+          </div>
+          <button class="mail-page-del-btn" onclick="mailPageDeleteRating(${item.postIdx},${item.idx})" style="display:inline-flex;align-items:center;gap:5px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></polyline></svg>
+            حذف التقييم
+          </button>`;
+      }
+      container.appendChild(div);
+    });
+  }
+
+  function mailPageDeleteNote(postIdx, commentIdx) {
+    if (!confirm('حذف هذا التعليق؟')) return;
+    if (!posts[postIdx]?.comments) return;
+    posts[postIdx].comments.splice(commentIdx, 1);
+    save();
+    render();
+    renderMailPage();
+    showToast('تم حذف التعليق');
+  }
+
+  function mailPageDeleteRating(postIdx, ratingIdx) {
+    if (!confirm('حذف هذا التقييم؟')) return;
+    if (!posts[postIdx]?.ratings) return;
+    posts[postIdx].ratings.splice(ratingIdx, 1);
+    save();
+    render();
+    renderMailPage();
+    showToast('تم حذف التقييم');
+  }
+
+  // keep old functions working (badge)
+  function toggleMail() { openMailPage(); }
+  function renderMail() {}
+  function switchMailTab(tab) { switchMailPageTab(tab); }
+
+  function updateMailBadge() {
+    let total = 0;
+    posts.forEach(p => { total += (p.comments||[]).length + (p.ratings||[]).length; });
+    const badge = document.getElementById('mailBadge');
+    if (badge) { badge.textContent = total; badge.classList.toggle('visible', total > 0); }
+  }
+
+  // INIT
+  render();
+
+  // ===== IMAGE PROTECTION =====
+  document.addEventListener('contextmenu', e => {
+    if (e.target.tagName === 'IMG') e.preventDefault();
+  });
+  document.addEventListener('dragstart', e => {
+    if (e.target.tagName === 'IMG') e.preventDefault();
+  });
+
+  // ===== COPY PROTECTION (زوار فقط) =====
+  document.addEventListener('copy', e => {
+    if (!isAdmin) e.preventDefault();
+  });
+  document.addEventListener('selectstart', e => {
+    if (!isAdmin && e.target.closest('.post-content, .post-title, .tip-text')) {
+      e.preventDefault();
+    }
+  });
+
+  // ===== DARK MODE =====
+  function toggleDark() {
+    const isDark = document.body.classList.toggle('dark');
+    document.getElementById('iconMoon').style.display = isDark ? 'none' : 'inline';
+    document.getElementById('iconSun').style.display = isDark ? 'inline' : 'none';
+    localStorage.setItem('darkMode', isDark ? '1' : '0');
+  }
+
+  if (localStorage.getItem('darkMode') === '1') {
+    document.body.classList.add('dark');
+    document.getElementById('iconMoon').style.display = 'none';
+    document.getElementById('iconSun').style.display = 'inline';
+  }
+</script>
+
+<!-- LINK SAFETY MODAL -->
+<div id="linkSafetyOverlay" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;" onclick="closeLinkModal(event)">
+  <div id="linkSafetyBox" style="position:relative;max-width:300px;width:88%;padding:28px 24px 22px;background:rgba(18,18,22,0.88);border:1px solid rgba(255,255,255,0.1);border-radius:18px 6px 18px 6px;box-shadow:0 20px 50px rgba(0,0,0,0.6);overflow:hidden;direction:rtl;" onclick="event.stopPropagation()">
+    <div style="position:relative;z-index:2;text-align:center;">
+      <!-- status text -->
+      <div id="linkModalStatus" style="font-size:0.92rem;font-weight:700;color:rgba(210,210,230,0.9);margin-bottom:6px;font-family:'Cairo',sans-serif;transition:color 0.4s;">جار التحقق من أمان الرابط</div>
+      <!-- progress bar -->
+      <div style="width:100%;height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;margin-bottom:18px;">
+        <div id="linkProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#60a5fa,#a78bfa);border-radius:4px;transition:width 7s linear;"></div>
+      </div>
+      <!-- buttons (hidden until verified) -->
+      <div id="linkModalBtns" style="display:none;gap:10px;justify-content:center;">
+        <button id="linkOpenBtn" onclick="openSafeLink()" style="padding:9px 22px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;">فتح الرابط</button>
+        <button onclick="closeLinkModalBtn()" style="padding:9px 22px;background:rgba(255,255,255,0.07);color:rgba(200,200,220,0.85);border:1px solid rgba(255,255,255,0.12);border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;">إغلاق</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
